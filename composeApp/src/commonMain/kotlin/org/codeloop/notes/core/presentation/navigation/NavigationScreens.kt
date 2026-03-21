@@ -1,6 +1,7 @@
 package org.codeloop.notes.core.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -26,8 +27,11 @@ sealed class NavigationScreens(
     @Serializable
     data object NotesScreen : NavigationScreens("notes")
 
+    @Serializable
+    data class EditNotes(val taskId : String = "") : NavigationScreens("edit_notes")
+
     companion object {
-        val default get() = NotesScreen
+        val default get() = EditNotes()
     }
 }
 
@@ -46,9 +50,9 @@ data class BottomNavigation (
                     route = NavigationScreens.Home
                 ),
                 BottomNavigation(
-                    title = "Profile",
-                    icon = Icons.Default.Person,
-                    route = NavigationScreens.Profile
+                    title = "Notes",
+                    icon = Icons.Default.AddCircle,
+                    route = NavigationScreens.NotesScreen
                 ),
                 BottomNavigation(
                     title = "Setting",

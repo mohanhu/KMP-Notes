@@ -1,6 +1,8 @@
 package org.codeloop.notes.core.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -33,9 +35,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import org.codeloop.notes.core.presentation.navigation.BottomNavigation
 import org.codeloop.notes.core.presentation.navigation.NavigationScreens
+import org.codeloop.notes.features.notes.presentation.components.NotesPreviewScreenRoot
 import org.codeloop.notes.features.notes.presentation.home.HomeScreenRoot
 import org.codeloop.notes.features.notes.presentation.notes.AddEditNoteScreen
 import org.codeloop.notes.features.notes.presentation.notes.NotesScreenRoot
@@ -78,20 +80,29 @@ fun App() {
                     )
                 }
             }
-        ) {
+        ) { paddingValues ->
             NavHost(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(it)
+                    .padding(paddingValues)
                 ,
                 navController = navController,
-                startDestination = NavigationScreens.default.route,
+                startDestination = NavigationScreens.default,
+                enterTransition = {
+                    slideInHorizontally { it }
+                },
+                exitTransition = {
+                    slideOutHorizontally { it }
+                }
             ) {
                 composable(NavigationScreens.Home.route) {
                     HomeScreenRoot(
                         modifier = Modifier.fillMaxSize(),
                         gotoAddEditNote = {
                             navController.navigate(NavigationScreens.AddEditNote())
+                        },
+                        notesListScreen = {
+                            navController.navigate(NavigationScreens.NotesScreen)
                         }
                     )
                 }
@@ -114,7 +125,26 @@ fun App() {
 
                 composable(NavigationScreens.NotesScreen.route) {
                     NotesScreenRoot(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = {
+                            navController.navigateUp()
+                        },
+                        onNoteClick = {
+
+                        },
+                        onNewNoteClick = {
+
+                        }
+                    )
+                }
+
+                composable<NavigationScreens.EditNotes> { entry ->
+                    val taskId = entry.arguments?.getString("taskId")
+                    NotesPreviewScreenRoot(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = {
+
+                        }
                     )
                 }
             }

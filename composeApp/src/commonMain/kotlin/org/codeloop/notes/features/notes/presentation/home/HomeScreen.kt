@@ -1,5 +1,13 @@
 package org.codeloop.notes.features.notes.presentation.home
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +40,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -46,10 +55,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +77,7 @@ import notes.composeapp.generated.resources.recent_notes
 import notes.composeapp.generated.resources.search
 import notes.composeapp.generated.resources.see_all
 import org.codeloop.notes.features.notes.presentation.components.HomeStufferCard
-import org.codeloop.notes.features.notes.presentation.components.NotesListCardItem
+import org.codeloop.notes.features.notes.presentation.components.TaskListCardItem
 import org.codeloop.notes.features.utils.SubGlideAsyncImage
 import org.codeloop.notes.features.utils.rememberShowFab
 import org.codeloop.notes.ui.theme.toColor
@@ -76,10 +87,12 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun HomeScreenRoot(
     modifier: Modifier = Modifier,
+    notesListScreen: () -> Unit,
     gotoAddEditNote: () -> Unit = {}
 ) {
     HomeScreen(
         modifier = modifier,
+        notesListScreen = notesListScreen,
         gotoAddEditNote = gotoAddEditNote
     )
 }
@@ -88,7 +101,8 @@ fun HomeScreenRoot(
 @Composable
 private fun HomeScreen(
     modifier: Modifier,
-    gotoAddEditNote: () -> Unit = {}
+    gotoAddEditNote: () -> Unit = {},
+    notesListScreen: () -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -96,6 +110,13 @@ private fun HomeScreen(
     val snackBarHostState by remember { mutableStateOf(SnackbarHostState()) }
 
     val showFab = rememberShowFab(listState)
+    var isFabExpanded by remember { mutableStateOf(false)}
+
+    LaunchedEffect(listState.firstVisibleItemIndex) {
+        if (listState.isScrollInProgress) {
+            isFabExpanded = false
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -229,27 +250,81 @@ private fun HomeScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                expanded = showFab,
-                onClick = gotoAddEditNote,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add"
-                    )
-                },
-                text = {
-                    Text(
-                        text = "New Note",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            val rotation by animateFloatAsState(
+                targetValue = if (isFabExpanded) 45f else 0f,
+                animationSpec = tween(300),
+                label = "rotation"
             )
+
+            Column (
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom)
+            ){
+               if (isFabExpanded) {
+                   FloatingActionButton(
+                       onClick = {
+                           gotoAddEditNote()
+                       },
+                       containerColor = MaterialTheme.colorScheme.primary,
+                   ){
+                       Text(
+                           modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                           text = "New Task",
+                           style = MaterialTheme.typography.bodyMedium
+                       )
+                   }
+
+                   FloatingActionButton(
+                       onClick = {
+                           gotoAddEditNote()
+                       },
+                       containerColor = MaterialTheme.colorScheme.primary,
+                   ){
+                       Text(
+                           modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                           text = "New Note",
+                           style = MaterialTheme.typography.bodyMedium
+                       )
+                   }
+               }
+
+                ExtendedFloatingActionButton(
+                    expanded = showFab,
+                    onClick = {
+                        isFabExpanded = !isFabExpanded
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    icon = {
+                        AnimatedContent(
+                            targetState = isFabExpanded,
+                            label = "icon",
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(200)) + scaleIn() togetherWith
+                                        fadeOut(animationSpec = tween(200)) + scaleOut()
+                            }
+                        ) { expanded ->
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add",
+                                modifier = Modifier.graphicsLayer{
+                                    rotationZ = rotation
+                                }
+                            )
+                        }
+
+                    },
+                    text = {
+                        Text(
+                            text = if (isFabExpanded) "Close" else "Create",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
         }
     ) { innerPadding ->
 
@@ -301,8 +376,7 @@ private fun HomeScreen(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainer)
                             .padding(8.dp)
-                            .size(24.dp)
-                        ,
+                            .size(24.dp),
                         painter = painterResource(Res.drawable.mic_search),
                         colorFilter = ColorFilter.tint(
                             MaterialTheme.colorScheme.onBackground
@@ -346,7 +420,7 @@ private fun HomeScreen(
                                                     clip = false
                                                 }.background(
                                                     Brush.radialGradient(
-                                                        listOf(Color.White,"#4c9aff".toColor())
+                                                        listOf(Color.White, "#4c9aff".toColor())
                                                     ),
                                                     shape = RoundedCornerShape(16.dp)
                                                 )
@@ -366,11 +440,14 @@ private fun HomeScreen(
                     }
 
                     item {
-                        Row (
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                8.dp,
+                                Alignment.CenterHorizontally
+                            ),
                             verticalAlignment = Alignment.CenterVertically
-                        ){
+                        ) {
                             Text(
                                 text = stringResource(Res.string.recent_notes),
                                 style = MaterialTheme.typography.titleLarge,
@@ -400,7 +477,7 @@ private fun HomeScreen(
                     items(
                         (1..20).toList()
                     ) {
-                        NotesListCardItem(
+                        TaskListCardItem(
                             modifier = modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 150.dp)

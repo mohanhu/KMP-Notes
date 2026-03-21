@@ -56,17 +56,26 @@ import org.codeloop.notes.features.utils.rememberShowFab
 
 @Composable
 fun NotesScreenRoot(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onNoteClick: (String) -> Unit,
+    onNewNoteClick: () -> Unit
 ){
     NotesScreen(
-        modifier = modifier
+        modifier = modifier,
+        onBackClick = onBackClick,
+        onNoteClick = onNoteClick,
+        onNewNoteClick = onNewNoteClick
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotesScreen(
-    modifier: Modifier
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onNoteClick: (String) -> Unit,
+    onNewNoteClick: () -> Unit
 ) {
 
     val scope = rememberCoroutineScope()
@@ -156,11 +165,9 @@ private fun NotesScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier,
                 expanded = showFab,
-                onClick = {
-
-                },
+                onClick = onNewNoteClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = {
@@ -238,7 +245,7 @@ private fun NotesScreen(
                                 .clip(CircleShape)
                                 .background(
                                     if (selected) {
-                                        MaterialTheme.colorScheme.primary
+                                        MaterialTheme.colorScheme.primary.copy(0.8f)
                                     }
                                     else {
                                         Color.Transparent
@@ -278,10 +285,16 @@ private fun NotesScreen(
                     if(pager.currentPage != page) return@HorizontalPager
                     when(page) {
                         0 -> {
-
+                            NotesListScreen(
+                                modifier = Modifier.fillMaxSize(),
+                                onNoteClick = onNoteClick
+                            )
                         }
                         1 -> {
-
+                            FavouriteNoteScreen(
+                                modifier = Modifier.fillMaxSize(),
+                                onNoteClick = onNoteClick
+                            )
                         }
                     }
                 }

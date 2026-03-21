@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import notes.composeapp.generated.resources.Res
 import notes.composeapp.generated.resources.mic_search
+import org.codeloop.notes.utils.permission.PermissionManager
+import org.codeloop.notes.utils.permission.PermissionType
+import org.codeloop.notes.utils.speech.createSpeechRecognizer
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -151,7 +155,37 @@ fun SearchBar(
     onValueChange : (String?) -> Unit = {},
     onImeAction : () -> Unit = {},
 ) {
+
     var titleField by remember { mutableStateOf(TextFieldValue(value?:"", selection = TextRange((value?:"").length)))}
+
+    val speechRecognizer = createSpeechRecognizer()
+    val permissionHelper = PermissionManager()
+
+    val permissionLaunch : (PermissionType) -> Unit = { permission ->
+        permissionHelper.requestPermission(
+            permission = permission,
+            onResult = {
+                speechRecognizer.startListening {
+                    titleField = TextFieldValue(it, selection = TextRange(it.length))
+                    onValueChange(it)
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        if (!permissionHelper.onPermissionGranted(PermissionType.MICROPHONE)) {
+        }
+    }
+
+    val launch : (Boolean) -> Unit = { enable ->
+        if (enable) {
+            permissionLaunch.invoke(PermissionType.MICROPHONE)
+        }
+        else {
+            speechRecognizer.stopListening()
+        }
+    }
 
     CompositionLocalProvider(
         LocalTextSelectionColors provides TextSelectionColors(
@@ -224,7 +258,7 @@ fun SearchBar(
                         modifier = Modifier
                             .padding(8.dp),
                         onClick = {
-
+                            launch.invoke(true)
                         },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
