@@ -76,6 +76,7 @@ import notes.composeapp.generated.resources.mic_search
 import notes.composeapp.generated.resources.recent_notes
 import notes.composeapp.generated.resources.search
 import notes.composeapp.generated.resources.see_all
+import org.codeloop.notes.features.notes.domain.model.NotesItem
 import org.codeloop.notes.features.notes.presentation.components.HomeStufferCard
 import org.codeloop.notes.features.notes.presentation.components.TaskListCardItem
 import org.codeloop.notes.features.utils.SubGlideAsyncImage
@@ -87,12 +88,15 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun HomeScreenRoot(
     modifier: Modifier = Modifier,
+    viewModel: HomeViewModel,
     notesListScreen: () -> Unit,
-    gotoAddEditNote: () -> Unit = {}
+    gotoAddEditTask: () -> Unit = {},
+    gotoAddEditNote: (NotesItem?) -> Unit = {}
 ) {
     HomeScreen(
         modifier = modifier,
         notesListScreen = notesListScreen,
+        gotoAddEditTask = gotoAddEditTask,
         gotoAddEditNote = gotoAddEditNote
     )
 }
@@ -101,7 +105,8 @@ fun HomeScreenRoot(
 @Composable
 private fun HomeScreen(
     modifier: Modifier,
-    gotoAddEditNote: () -> Unit = {},
+    gotoAddEditNote: (NotesItem?) -> Unit = {},
+    gotoAddEditTask: () -> Unit = {},
     notesListScreen: () -> Unit
 ) {
 
@@ -263,7 +268,7 @@ private fun HomeScreen(
                if (isFabExpanded) {
                    FloatingActionButton(
                        onClick = {
-                           gotoAddEditNote()
+                           gotoAddEditTask()
                        },
                        containerColor = MaterialTheme.colorScheme.primary,
                    ){
@@ -276,7 +281,7 @@ private fun HomeScreen(
 
                    FloatingActionButton(
                        onClick = {
-                           gotoAddEditNote()
+                           gotoAddEditNote(null)
                        },
                        containerColor = MaterialTheme.colorScheme.primary,
                    ){

@@ -46,7 +46,7 @@ fun CategoryCardChip(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(Color.Transparent)
-                .padding(horizontal = 23.dp)
+                .padding(horizontal = 18.dp)
             ,
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically

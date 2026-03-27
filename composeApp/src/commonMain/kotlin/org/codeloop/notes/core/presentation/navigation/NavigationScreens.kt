@@ -3,7 +3,6 @@ package org.codeloop.notes.core.presentation.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
@@ -22,16 +21,16 @@ sealed class NavigationScreens(
     data object Settings : NavigationScreens("settings")
 
     @Serializable
-    data class AddEditNote(val taskId : String = "") : NavigationScreens("add_edit_note")
+    data class AddEditTask(val taskId : String = "") : NavigationScreens("add_edit_task")
 
     @Serializable
     data object NotesScreen : NavigationScreens("notes")
 
     @Serializable
-    data class EditNotes(val taskId : String = "") : NavigationScreens("edit_notes")
+    data class EditNotes(val notesId : Int? = null) : NavigationScreens("edit_notes")
 
     companion object {
-        val default get() = EditNotes()
+        val default get() = Home
     }
 }
 

@@ -9,6 +9,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:hardwareAccelerated="true"
+        android:name=".core.CoreApplication"
         android:usesCleartextTraffic="false"
         android:largeHeap="true"
         android:windowSoftInputMode="adjustResize|stateAlwaysHidden"

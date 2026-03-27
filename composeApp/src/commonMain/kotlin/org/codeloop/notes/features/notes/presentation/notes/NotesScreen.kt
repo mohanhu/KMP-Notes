@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.codeloop.notes.features.notes.presentation.components.SearchBar
 import org.codeloop.notes.features.utils.rememberShowFab
@@ -57,12 +61,21 @@ import org.codeloop.notes.features.utils.rememberShowFab
 @Composable
 fun NotesScreenRoot(
     modifier: Modifier = Modifier,
+    viewModel: NotesListViewModel,
     onBackClick: () -> Unit,
-    onNoteClick: (String) -> Unit,
+    onNoteClick: (Int) -> Unit,
     onNewNoteClick: () -> Unit
 ){
+    val allList by viewModel.allList.collectAsStateWithLifecycle()
+    val favList by viewModel.favouritesList.collectAsStateWithLifecycle()
+
     NotesScreen(
         modifier = modifier,
+        state = viewModel.uiState,
+        allList = allList,
+        favouritesList = favList,
+        uiEvent = viewModel.uiEvent,
+        action = viewModel.accept,
         onBackClick = onBackClick,
         onNoteClick = onNoteClick,
         onNewNoteClick = onNewNoteClick
@@ -73,10 +86,17 @@ fun NotesScreenRoot(
 @Composable
 private fun NotesScreen(
     modifier: Modifier = Modifier,
+    state: StateFlow<NotesListUiState>,
+    allList: List<NotesListUiModel>,
+    favouritesList: List<NotesListUiModel>,
+    uiEvent: SharedFlow<NotesListUiEvent>,
+    action: (NotesListUiAction) -> Unit,
     onBackClick: () -> Unit,
-    onNoteClick: (String) -> Unit,
+    onNoteClick: (Int) -> Unit,
     onNewNoteClick: () -> Unit
 ) {
+
+    val uiState by state.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -86,6 +106,12 @@ private fun NotesScreen(
 
     val tabList = remember { listOf("All","Favorites") }
     val pager = rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f, pageCount = { tabList.size })
+
+    LaunchedEffect(pager.currentPage) {
+        if (pager.currentPage!=uiState.tabSelectedIndex) {
+            action(NotesListUiAction.ChangeTab(pager.currentPage))
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -150,9 +176,7 @@ private fun NotesScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                             contentColor = MaterialTheme.colorScheme.onBackground
                         ),
-                        onClick = {
-
-                        }
+                        onClick = onBackClick
                     ) {
                         Icon(
                             modifier = Modifier.padding(10.dp),
@@ -287,12 +311,14 @@ private fun NotesScreen(
                         0 -> {
                             NotesListScreen(
                                 modifier = Modifier.fillMaxSize(),
+                                allList = allList,
                                 onNoteClick = onNoteClick
                             )
                         }
                         1 -> {
-                            FavouriteNoteScreen(
+                            NotesListScreen(
                                 modifier = Modifier.fillMaxSize(),
+                                allList = favouritesList,
                                 onNoteClick = onNoteClick
                             )
                         }

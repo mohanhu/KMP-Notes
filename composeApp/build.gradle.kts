@@ -1,4 +1,6 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -66,8 +68,10 @@ kotlin {
 
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
-
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.androidx.compose.animation)
         }
+
         nativeMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
@@ -78,6 +82,9 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+    }
+    compilerOptions {
+        optIn.add("kotlin.time.ExperimentalTime")
     }
 }
 

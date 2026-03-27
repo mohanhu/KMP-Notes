@@ -18,19 +18,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.codeloop.notes.features.notes.domain.model.NotesItem
 import org.codeloop.notes.ui.theme.toColor
-import kotlin.random.Random
+import org.codeloop.notes.utils.zonetimer.ZoneTimer
 
 @Composable
 fun NotesListCardItem(
-    modifier: Modifier
+    modifier: Modifier,
+    notesItem: NotesItem,
+    onNoteClick: (Int) -> Unit
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(
-                min = (Random.nextInt(160,300)).dp,
-                max = 400.dp
+                min = 50.dp,
+                max = 300.dp
             )
             .height(IntrinsicSize.Min)
         ,
@@ -43,6 +46,9 @@ fun NotesListCardItem(
         border = BorderStroke(
             1.dp, MaterialTheme.colorScheme.surfaceContainerLowest
         ),
+        onClick = {
+            onNoteClick(notesItem.id)
+        },
         shape = RoundedCornerShape(14.dp),
     ) {
         Column(
@@ -54,21 +60,14 @@ fun NotesListCardItem(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = "Daily Journey Entry",
+                text = notesItem.title,
                 maxLines = 1,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Before your app can request access to privacy-sensitive data like the camera, location, or contacts, you must provide a clear, user-friendly explanation of why your app needs that access. This is done by adding a specific key and string value to your project's Info.plist file. \n" +
-                        "Apple Developer\n" +
-                        "Apple Developer\n" +
-                        " +2\n" +
-                        "Open your project in Xcode and navigate to the Info.plist file.\n" +
-                        "Add a new key from the dropdown list.\n" +
-                        "Select the appropriate Privacy - Usage Description key (e.g., Privacy - Camera Usage Description or NSCameraUsageDescription in the source code).\n" +
-                        "In the Value field, enter a concise message for the user, such as \"This app needs camera access to take photos\"",
+                text = notesItem.description,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f),
                 overflow = TextOverflow.Ellipsis,
@@ -76,7 +75,7 @@ fun NotesListCardItem(
             )
 
             Text(
-                text = "2 days ago".take(10),
+                text = (ZoneTimer.formatDate(notesItem.createdAt)).take(10),
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 modifier = Modifier.align(Alignment.End),

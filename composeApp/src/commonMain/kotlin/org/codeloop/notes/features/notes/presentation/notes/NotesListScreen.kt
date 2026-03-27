@@ -1,120 +1,161 @@
 package org.codeloop.notes.features.notes.presentation.notes
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.codeloop.notes.features.notes.domain.model.NotesItem
 import org.codeloop.notes.features.notes.presentation.components.NotesListCardItem
-import kotlin.random.Random
+import org.codeloop.notes.utils.zonetimer.ZoneTimer
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NotesListScreen(
     modifier: Modifier,
-    onNoteClick: (String) -> Unit
+    allList: List<NotesListUiModel>,
+    onNoteClick: (Int) -> Unit
 ) {
-
-    val listState = rememberLazyStaggeredGridState()
-    val scope = rememberCoroutineScope()
-    val snackBarHostState by remember { mutableStateOf(SnackbarHostState()) }
-
-    Scaffold(
+    Column(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState,
-                snackbar = { snackBarData ->
-                    Snackbar(
-                        modifier = Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .padding(12.dp)
-                    ) {
-                        Row {
-                            Text(
-                                text = snackBarData.visuals.message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top)
+    ) {
+        allList.forEach { item ->
+            when (item) {
+                NotesListUiModel.Footer -> {}
 
-                            snackBarData.visuals.actionLabel?.let {
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier
-                                        .padding(start = 8.dp)
-                                        .clickable {
-                                            snackBarData.performAction()
-                                        }
-                                )
+                is NotesListUiModel.Item -> {
+                    NotesItem(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        notesItem = item.notesItem,
+                        onNoteClick = onNoteClick
+                    )
+                }
+
+                NotesListUiModel.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(32.dp),
+                            trackColor = MaterialTheme.colorScheme.background,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+
+                NotesListUiModel.PlaceHolder -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(
+                            8.dp,
+                            Alignment.CenterVertically
+                        ),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No Result Found !",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            maxLines = 1
+                        )
+
+                        TextButton(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary.copy(0.4f),
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            onClick = {
+
                             }
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp),
+                                text = "Retry",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                maxLines = 1
+                            )
                         }
                     }
                 }
-            )
-        },
-        contentWindowInsets = WindowInsets.statusBars.only(WindowInsetsSides.Horizontal)
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier.padding(innerPadding),
-            color = Color.Transparent
-        ) {
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-                verticalItemSpacing = 8.dp,
-                state = listState,
-                contentPadding = PaddingValues(bottom = 150.dp)
-            ) {
-                items((1..30).toList()) {
+            }
+        }
+    }
+}
+
+@Composable
+fun NotesItem(
+    modifier: Modifier,
+    notesItem: List<NotesItem>,
+    onNoteClick: (Int) -> Unit
+) {
+    val staggeredGridState = rememberLazyStaggeredGridState()
+
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+        verticalItemSpacing = 8.dp,
+        state = staggeredGridState,
+    ) {
+        notesItem
+            .sortedByDescending { it.createdAt }
+            .groupBy { ZoneTimer.formatDate(it.createdAt) }
+            .forEach { (date, notes) ->
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+                items(notes) { note ->
                     NotesListCardItem(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = (Random.nextInt(160,300)).dp)
-                            .height(IntrinsicSize.Min)
-                        ,
+                            .fillMaxWidth(),
+                        notesItem = note,
+                        onNoteClick = {
+                            onNoteClick(note.id)
+                        }
                     )
                 }
             }
+
+        item (
+            span = StaggeredGridItemSpan.FullLine
+        ){
+            Spacer(
+                modifier = Modifier.fillMaxWidth().height(100.dp)
+            )
         }
     }
 }

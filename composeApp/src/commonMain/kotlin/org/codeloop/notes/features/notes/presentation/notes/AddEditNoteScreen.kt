@@ -1,6 +1,5 @@
 package org.codeloop.notes.features.notes.presentation.notes
 
-import androidx.compose.animation.core.repeatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -59,7 +58,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEditNoteScreen(
+fun AddEditTaskScreen(
     modifier: Modifier
 ) {
 

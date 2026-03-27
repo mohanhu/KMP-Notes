@@ -37,11 +37,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.codeloop.notes.core.presentation.navigation.BottomNavigation
 import org.codeloop.notes.core.presentation.navigation.NavigationScreens
-import org.codeloop.notes.features.notes.presentation.components.NotesPreviewScreenRoot
 import org.codeloop.notes.features.notes.presentation.home.HomeScreenRoot
-import org.codeloop.notes.features.notes.presentation.notes.AddEditNoteScreen
+import org.codeloop.notes.features.notes.presentation.home.HomeViewModel
+import org.codeloop.notes.features.notes.presentation.notes.AddEditTaskScreen
+import org.codeloop.notes.features.notes.presentation.notes.NotesListViewModel
+import org.codeloop.notes.features.notes.presentation.notes.NotesPreviewScreenRoot
+import org.codeloop.notes.features.notes.presentation.notes.NotesPreviewViewModel
 import org.codeloop.notes.features.notes.presentation.notes.NotesScreenRoot
 import org.codeloop.notes.ui.theme.NotesAppTheme
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun App() {
@@ -87,7 +91,7 @@ fun App() {
                     .padding(paddingValues)
                 ,
                 navController = navController,
-                startDestination = NavigationScreens.default,
+                startDestination = NavigationScreens.default.route,
                 enterTransition = {
                     slideInHorizontally { it }
                 },
@@ -96,10 +100,17 @@ fun App() {
                 }
             ) {
                 composable(NavigationScreens.Home.route) {
+
+                    val viewModel = koinViewModel<HomeViewModel>()
+
                     HomeScreenRoot(
                         modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
                         gotoAddEditNote = {
-                            navController.navigate(NavigationScreens.AddEditNote())
+                            navController.navigate(NavigationScreens.EditNotes(it?.id))
+                        },
+                        gotoAddEditTask = {
+                            navController.navigate(NavigationScreens.AddEditTask())
                         },
                         notesListScreen = {
                             navController.navigate(NavigationScreens.NotesScreen)
@@ -116,34 +127,39 @@ fun App() {
                         text = "Settings"
                     )
                 }
-                composable<NavigationScreens.AddEditNote> { entry ->
+                composable<NavigationScreens.AddEditTask> { entry ->
 //                    val taskId = entry.toRoute<NavigationScreens.AddEditNote>()
-                    AddEditNoteScreen(
+                    AddEditTaskScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
 
                 composable(NavigationScreens.NotesScreen.route) {
+
+                    val notesViewModel = koinViewModel<NotesListViewModel>()
+
                     NotesScreenRoot(
                         modifier = Modifier.fillMaxSize(),
+                        viewModel = notesViewModel,
                         onBackClick = {
                             navController.navigateUp()
                         },
                         onNoteClick = {
-
+                            navController.navigate(NavigationScreens.EditNotes(it))
                         },
                         onNewNoteClick = {
-
+                            navController.navigate(NavigationScreens.EditNotes())
                         }
                     )
                 }
 
                 composable<NavigationScreens.EditNotes> { entry ->
-                    val taskId = entry.arguments?.getString("taskId")
+                    val viewModel = koinViewModel<NotesPreviewViewModel>()
                     NotesPreviewScreenRoot(
                         modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
                         onBackClick = {
-
+                            navController.navigateUp()
                         }
                     )
                 }
